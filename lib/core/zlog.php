@@ -101,6 +101,14 @@ class ZLog {
         self::$lastLogs[$loglevel] = $message;
         $data = self::buildLogString($loglevel) . $message . "\n";
 
+        // define some constants for the logging
+        if (!defined('LOGUSERLEVEL'))
+            define('LOGUSERLEVEL', LOGLEVEL_OFF);
+
+        if (!defined('LOGLEVEL'))
+            define('LOGLEVEL', LOGLEVEL_OFF);
+
+
         if ($loglevel <= LOGLEVEL) {
             @file_put_contents(LOGFILE, $data, FILE_APPEND);
         }
@@ -173,6 +181,15 @@ class ZLog {
      * @return string
      */
     static private function buildLogString($loglevel) {
+
+        // define some constants for the logging
+        if (!defined('LOGUSERLEVEL'))
+            define('LOGUSERLEVEL', LOGLEVEL_OFF);
+
+        if (!defined('LOGLEVEL'))
+            define('LOGLEVEL', LOGLEVEL_OFF);
+
+
         if (!isset(self::$pidstr))
             self::$pidstr = '[' . str_pad(@getmypid(),5," ",STR_PAD_LEFT) . '] ';
 
