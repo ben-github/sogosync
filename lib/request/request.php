@@ -172,14 +172,14 @@ class Request {
         }
 
         // in base64 encoded query string user is not necessarily set
-        if (!isset(self::$getUser) && isset($_ENV['REDIRECT_PHP_AUTH_DIGEST_RAW']) ) {
-             preg_match('/Basic\s+(.*)$/i', $_ENV['REDIRECT_PHP_AUTH_DIGEST_RAW'], $matches);
-             list(self::$authUser, self::$authPassword ) = explode(':',base64_decode($matches[1]));
-             list(self::$authUser, ) = Utils::SplitDomainUser(strtolower(self::$authUser));
-        }
+	     if (!isset(self::$getUser) && isset($_SERVER['PHP_AUTH_USER']))
+                 list(self::$getUser,) = Utils::SplitDomainUser(strtolower($_SERVER['PHP_AUTH_USER']));
+             elseif (!isset(self::$getUser) && isset($_ENV['REDIRECT_PHP_AUTH_DIGEST_RAW']) ) {
+                 preg_match('/Basic\s+(.*)$/i', $_ENV['REDIRECT_PHP_AUTH_DIGEST_RAW'], $matches);
+                 list(self::$authUser, self::$authPassword ) = explode(':',base64_decode($matches[1]));
+                 list(self::$authUser, ) = Utils::SplitDomainUser(strtolower(self::$authUser));
+             }
 
-        //if (!isset(self::$getUser) && isset($_SERVER['PHP_AUTH_USER']))
-        //    list(self::$getUser,) = Utils::SplitDomainUser(strtolower($_SERVER['PHP_AUTH_USER']));
     }
 
     /**
@@ -227,17 +227,18 @@ class Request {
      */
     static public function AuthenticationInfo() {
         // split username & domain if received as one
-        if (isset($_ENV['REDIRECT_PHP_AUTH_DIGEST_RAW'])) {
+        if (isset($_SERVER['PHP_AUTH_USER'])) {
+            list(self::$authUser, self::$authDomain) = Utils::SplitDomainUser($_SERVER['PHP_AUTH_USER']);
+            self::$authPassword = (isset($_SERVER['PHP_AUTH_PW']))?$_SERVER['PHP_AUTH_PW'] : "";
+        }
+
+        elseif (isset($_ENV['REDIRECT_PHP_AUTH_DIGEST_RAW'])) {
             preg_match('/Basic\s+(.*)$/i', $_ENV['REDIRECT_PHP_AUTH_DIGEST_RAW'], $matches);
             list(self::$authUser, self::$authPassword ) = explode(':',base64_decode($matches[1]));
             list(self::$authUser,) = Utils::SplitDomainUser(strtolower(self::$authUser));
         }
 
 
-        //if (isset($_SERVER['PHP_AUTH_USER'])) {
-        //    list(self::$authUser, self::$authDomain) = Utils::SplitDomainUser($_SERVER['PHP_AUTH_USER']);
-        //    self::$authPassword = (isset($_SERVER['PHP_AUTH_PW']))?$_SERVER['PHP_AUTH_PW'] : "";
-        //}
 
         // authUser & authPassword are unfiltered!
         return (self::$authUser != "" && self::$authPassword != "");
